@@ -10,10 +10,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 h1{font-size:1.6em; margin-bottom:1em;}
 button{padding:0.8em 1.5em;font-size:1em;margin:0.5em;border:none;border-radius:0.5em;background:#2563eb;color:white;cursor:pointer;}
 button:hover{background:#1e40af;}
-ul{list-style:none;padding:0;margin-top:1em;}
-li{background:white;margin:0.5em auto;padding:0.8em;border-radius:0.5em;max-width:500px;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
 canvas{margin-top:0.5em;}
-a{color:#2563eb;word-break:break-all;}
 </style>
 </head>
 <body>
@@ -21,12 +18,8 @@ a{color:#2563eb;word-break:break-all;}
 <h1>🎁 Amigo Secreto 順番抽選 🎁</h1>
 
 <div id="main">
-  <p>参加者リストは <code>data/names.json</code> から読み込みます</p>
   <button id="nextBtn">次の人を抽選する</button>
-  <button id="downloadBtn" style="display:none;">結果をJSONで保存</button>
-
-  <h2>抽選状況</h2>
-  <ul id="result"></ul>
+  <div id="drawResult" style="margin-top:2em;"></div>
 </div>
 
 <script>
@@ -39,12 +32,12 @@ if(params.has('to')){
     <h2>🎁 あなたへのお相手 🎁</h2>
     <p style="font-size:1.2em;">あなたがプレゼントを贈るのは：</p>
     <h1 style="color:#2563eb;">${name}</h1>
-    <p><a href="${location.origin}${location.pathname}">← 抽選ページに戻る</a></p>
   `;
 } else {
 
-  let members = [];
-  let receivers = [];
+  // 参加者リストを変数で定義（ここを変更すれば自動で反映）
+  let members = ["太郎", "花子", "健一", "真由美"];
+  let receivers = [...members];
   let nextIndex = 0;
   let pairs = [];
 
@@ -55,22 +48,21 @@ if(params.has('to')){
   if(savedPairs.length>0){
     pairs = savedPairs;
     nextIndex = savedIndex;
-    showPairs(pairs);
+    // 既に抽選済みの受取人を除外
+    const used = pairs.map(p=>p.receiver);
+    receivers = members.filter(m=>!used.includes(m));
   }
 
-  // --- 名前読み込み ---
-  async function loadNames(){
-    const res = await fetch('data/names.json');
-    const data = await res.json();
-    members = data.members;
-    if(receivers.length===0){
-      receivers = [...members];
+  function updateNextMessage(){
+    const mainDiv = document.getElementById('main');
+    if(nextIndex < members.length){
+      const giver = members[nextIndex];
+      mainDiv.querySelector('#nextBtn').textContent = `次は ${giver} さんが抽選`;
+    } else {
+      mainDiv.querySelector('#nextBtn').textContent = `全員抽選済み`;
     }
   }
 
-  loadNames();
-
-  // --- 抽選処理 ---
   function drawNext(){
     if(nextIndex >= members.length){
       alert("全員抽選済みです！");
@@ -78,54 +70,30 @@ if(params.has('to')){
     }
 
     const giver = members[nextIndex];
-
-    // 残りの受取人からランダムに選ぶ
-    const available = receivers.filter(r => !pairs.some(p => p.receiver===r));
-    const i = Math.floor(Math.random() * available.length);
-    const receiver = available[i];
+    const i = Math.floor(Math.random() * receivers.length);
+    const receiver = receivers[i];
 
     pairs.push({giver, receiver});
+    receivers.splice(i,1);
     nextIndex++;
 
-    // LocalStorageに保存
     localStorage.setItem("pairs", JSON.stringify(pairs));
     localStorage.setItem("next_index", nextIndex);
 
-    showPairs(pairs);
-  }
+    const drawDiv = document.getElementById('drawResult');
+    drawDiv.innerHTML = `
+      <p>${giver} さんの抽選結果はこちら：</p>
+      <a href="${location.origin}${location.pathname}?to=${btoa(encodeURIComponent(receiver))}" target="_blank">結果を見る</a>
+      <br><canvas id="qr"></canvas>
+    `;
+    QRCode.toCanvas(document.getElementById('qr'), `${location.origin}${location.pathname}?to=${btoa(encodeURIComponent(receiver))}`, {width:120});
 
-  // --- 結果表示 ---
-  function showPairs(pairs){
-    const ul = document.getElementById('result');
-    ul.innerHTML = '';
-    pairs.forEach((p,i)=>{
-      const data = btoa(encodeURIComponent(p.receiver));
-      const link = `${location.origin}${location.pathname}?to=${data}`;
-      const li = document.createElement('li');
-      li.innerHTML = `<b>${p.giver}</b> さん用リンク：
-        <a href="${link}" target="_blank">こちらをタップ</a>
-        <br><canvas id="qr_${i}"></canvas>`;
-      ul.appendChild(li);
-      QRCode.toCanvas(document.getElementById(`qr_${i}`), link, {width:100});
-    });
-
-    // ダウンロードボタン表示
-    if(pairs.length>0){
-      document.getElementById('downloadBtn').style.display='inline-block';
-    }
-  }
-
-  // --- JSONダウンロード ---
-  function downloadJSON(data){
-    const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = "amigo_result.json";
-    link.click();
+    updateNextMessage();
   }
 
   document.getElementById('nextBtn').addEventListener('click', drawNext);
-  document.getElementById('downloadBtn').addEventListener('click', ()=>{downloadJSON(pairs)});
+
+  updateNextMessage();
 }
 </script>
 
