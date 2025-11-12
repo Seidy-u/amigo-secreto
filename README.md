@@ -1,2 +1,2 @@
-# amigo-secreto.gituhub.io
+# amigo-secreto
 amigo-secreto
