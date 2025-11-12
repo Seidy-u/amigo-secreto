@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Amigo Secreto 結果</title>
+<title>Amigo Secreto - Resultado</title>
 <style>
 body { font-family:"Noto Sans JP",sans-serif; text-align:center; margin-top:40px; background:#fffaf5; color:#333; }
 #receiver { font-size:2em; margin-top:30px; transition: all 0.4s ease; }
@@ -14,24 +14,24 @@ input { padding:8px; border-radius:6px; border:1px solid #aaa; width:180px; }
 </style>
 </head>
 <body>
-<h1>🎁 あなたの相手 🎁</h1>
+<h1>🎁 Seu Amigo Secreto 🎁</h1>
 <div id="content"></div>
 <div id="spinner"></div>
 <div id="receiver"></div>
 
 <script>
 const giver = new URLSearchParams(location.search).get('giver');
-if(!giver){ document.body.innerHTML="URLが不正です"; throw ''; }
+if(!giver){ document.body.innerHTML="URL inválido"; throw ''; }
 
 const content = document.getElementById("content");
 const spinner = document.getElementById("spinner");
 const receiverBox = document.getElementById("receiver");
 
 content.innerHTML = `
-<p>${giver} さん、パスワードを設定または入力してください。</p>
-<input type="password" id="pw" placeholder="パスワード">
-<input type="password" id="pw2" placeholder="確認用パスワード">
-<button id="btn">結果を見る</button>
+<p>${giver} configure ou insira sua senha.</p>
+<input type="password" id="pw" placeholder="Senha">
+<input type="password" id="pw2" placeholder="Confirmar senha">
+<button id="btn">Ver resultado</button>
 <div id="msg"></div>
 `;
 
@@ -49,11 +49,11 @@ document.getElementById("btn").onclick = async () => {
   const pw = document.getElementById("pw").value;
   const pw2 = document.getElementById("pw2").value;
 
-  if(!pw) return alert("パスワードを入力してください");
+  if(!pw) return alert("insira a senha");
 
   // 初回設定時は2回入力を確認
   if(pw2 !== undefined && pw !== pw2){
-    return alert("パスワードが一致しません");
+    return alert("As senhas não coincidem");
   }
 
   const res = await fetch("/api/result?giver=" + encodeURIComponent(giver), {
@@ -74,9 +74,9 @@ document.getElementById("btn").onclick = async () => {
   document.getElementById("pw").style.display="none";
   document.getElementById("pw2").style.display="none";
   document.getElementById("btn").style.display="none";
-  msg.innerHTML = `<p>抽選中...</p>`;
+  msg.innerHTML = `<p>Sorteando...</p>`;
 
-  if(memberNames.length === 0) memberNames = ["太郎","花子","健一","真由美","大輔","さゆり","圭吾","みゆき"];
+  if(memberNames.length === 0) memberNames = ["a","b","c","d","e","f","g","h"];
 
   let count = 0;
   const interval = setInterval(()=>{

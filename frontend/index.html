@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Amigo Secreto 一覧</title>
+<title>Amigo Secreto - Lista</title>
 <style>
 body { text-align:center; font-family:"Noto Sans JP",sans-serif; background:#fffaf5; color:#333; }
 h1 { margin-top:1.2em; color:#e44; }
@@ -18,23 +18,23 @@ button:hover { background:#c22; }
 </style>
 </head>
 <body>
-<h1>🎁 Amigo Secreto 抽選結果リンク一覧 🎁</h1>
+<h1>🎁 Lista de Links do Amigo Secreto 🎁</h1>
 <form id="addForm">
-<input type="text" id="nameInput" placeholder="名前を入力" required>
-<button type="submit">追加</button>
+<input type="text" id="nameInput" placeholder="Insira o nome" required>
+<button type="submit">Adicionar</button>
 </form>
 <ul id="list"></ul>
 <form id="resetForm">
-  <input type="password" id="resetPw" placeholder="リセット用パスワード">
-  <button type="submit" style="background:#555;">全員リセット</button>
+  <input type="password" id="resetPw" placeholder="Senha para resetar">
+  <button type="submit" style="background:#555;">Resetar</button>
 </form>
 
 <script>
 document.getElementById("resetForm").addEventListener("submit", async e => {
 	e.preventDefault();
 	const pw = document.getElementById("resetPw").value;
-	if(!pw) return alert("パスワードを入力してください");
-	if(!confirm("本当に全員リセットしますか？")) return;
+	if(!pw) return alert("senha");
+	if(!confirm("Deseja realmente resetar todos os participantes?")) return;
 
 	const res = await fetch("/api/reset", { 
 		method:"POST",
@@ -44,7 +44,7 @@ document.getElementById("resetForm").addEventListener("submit", async e => {
 
 	const text = await res.text();
 	if(!res.ok){
-		alert("リセットに失敗しました: " + text);
+		alert("Falha ao resetar: " + text);
 		return;
 	}
 
@@ -61,23 +61,23 @@ async function loadList() {
 	const ul = document.getElementById("list");
 	ul.innerHTML = '';
 	if (data.length === 0) {
-		ul.innerHTML = '<li>まだ参加者はいません。</li>';
+		ul.innerHTML = '<li>Nenhum participante ainda.</li>';
 		return;
 	}
 	data.forEach(p => {
 		const li = document.createElement('li');
-		li.innerHTML = `${p.name} さん → <a href="${p.link}" target="_blank">結果を見る</a>`;
+		li.innerHTML = `${p.name} → <a href="${p.link}" target="_blank">Ver resultado</a>`;
 		ul.appendChild(li);
 	});
 }
 document.getElementById("addForm").addEventListener("submit", async e => {
 	e.preventDefault();
 	const name = document.getElementById("nameInput").value.trim();
-	if (!name) return alert("名前を入力してください");
+	if (!name) return alert("insira o nome");
 	const res = await fetch("/api/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
 	if (!res.ok) {
 		const text = await res.text();
-		alert("追加に失敗しました: " + text);
+		alert("Falha ao adicionar: " + text);
 		return;
 	}
 	document.getElementById("nameInput").value = "";
