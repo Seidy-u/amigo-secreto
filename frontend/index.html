@@ -24,6 +24,23 @@ button:hover { background:#c22; }
 <button type="submit">追加</button>
 </form>
 <ul id="list"></ul>
+<form id="resetForm">
+  <button type="submit" style="background:#555;">全員リセット</button>
+</form>
+
+<script>
+document.getElementById("resetForm").addEventListener("submit", async e => {
+	e.preventDefault();
+	if(!confirm("本当に全員リセットしますか？")) return;
+	const res = await fetch("/api/reset", { method:"POST" });
+	if(!res.ok){
+		alert("リセットに失敗しました: " + await res.text());
+		return;
+	}
+	alert("状態をリセットしました");
+	await loadList();
+});
+</script>
 <script>
 async function loadList() {
 	const res = await fetch("/api/list");
