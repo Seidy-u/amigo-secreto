@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amigo Secreto 結果</title>
+<style>
+body { font-family:"Noto Sans JP",sans-serif; text-align:center; margin-top:40px; background:#fffaf5; color:#333; }
+#receiver { font-size:2em; margin-top:30px; transition: all 0.4s ease; }
+#spinner { font-size:1.5em; color:#888; margin-top:20px; }
+button { background:#e44; color:white; border:none; padding:8px 18px; border-radius:8px; cursor:pointer; font-size:1em; }
+button:hover { background:#c22; }
+input { padding:8px; border-radius:6px; border:1px solid #aaa; width:180px; }
+</style>
+</head>
+<body>
+<h1>🎁 あなたの相手 🎁</h1>
+<div id="content"></div>
+<div id="spinner"></div>
+<div id="receiver"></div>
+
+<script>
+const giver = new URLSearchParams(location.search).get('giver');
+if(!giver){ document.body.innerHTML="URLが不正です"; throw ''; }
+
+const content = document.getElementById("content");
+const spinner = document.getElementById("spinner");
+const receiverBox = document.getElementById("receiver");
+
+content.innerHTML = `
+<p>${giver} さん、パスワードを設定または入力してください。</p>
+<input type="password" id="pw" placeholder="パスワード">
+<input type="password" id="pw2" placeholder="確認用パスワード">
+<button id="btn">結果を見る</button>
+<div id="msg"></div>
+`;
+
+let memberNames = [];
+
+// サーバーから参加者リスト取得
+async function loadMembers() {
+  const res = await fetch("/api/list");
+  const data = await res.json();
+  memberNames = data.map(x => x.name);
+}
+loadMembers();
+
+document.getElementById("btn").onclick = async () => {
+  const pw = document.getElementById("pw").value;
+  const pw2 = document.getElementById("pw2").value;
+
+  if(!pw) return alert("パスワードを入力してください");
+
+  // 初回設定時は2回入力を確認
+  if(pw2 !== undefined && pw !== pw2){
+    return alert("パスワードが一致しません");
+  }
+
+  const res = await fetch("/api/result?giver=" + encodeURIComponent(giver), {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({password: pw})
+  });
+
+  const msg = document.getElementById("msg");
+  if(!res.ok){
+    msg.textContent = await res.text();
+    return;
+  }
+
+  const data = await res.json();
+
+  // 入力欄を非表示にして抽選アニメーション
+  document.getElementById("pw").style.display="none";
+  document.getElementById("pw2").style.display="none";
+  document.getElementById("btn").style.display="none";
+  msg.innerHTML = `<p>抽選中...</p>`;
+
+  if(memberNames.length === 0) memberNames = ["太郎","花子","健一","真由美","大輔","さゆり","圭吾","みゆき"];
+
+  let count = 0;
+  const interval = setInterval(()=>{
+    const randomName = memberNames[Math.floor(Math.random()*memberNames.length)];
+    spinner.textContent = "🎲 " + randomName + " 🎲";
+    count++;
+    if(count>15){
+      clearInterval(interval);
+      spinner.textContent="";
+      receiverBox.innerHTML=`<h2>🎉 ${data.receiver} 🎉</h2>`;
+    }
+  },120);
+};
+</script>
+</body>
+</html>

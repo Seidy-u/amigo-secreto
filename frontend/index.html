@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amigo Secreto 一覧</title>
+<style>
+body { text-align:center; font-family:"Noto Sans JP",sans-serif; background:#fffaf5; color:#333; }
+h1 { margin-top:1.2em; color:#e44; }
+ul { list-style:none; padding:0; max-width:500px; margin:0 auto; }
+li { background:white; border-radius:12px; margin:8px 0; padding:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+a { text-decoration:none; color:#e44; font-weight:bold; }
+a:hover { text-decoration:underline; }
+form { margin:20px auto; max-width:400px; display:flex; justify-content:center; gap:10px; }
+input { flex:1; padding:8px; border-radius:6px; border:1px solid #aaa; }
+button { background:#e44; color:white; border:none; border-radius:6px; padding:8px 16px; cursor:pointer; }
+button:hover { background:#c22; }
+</style>
+</head>
+<body>
+<h1>🎁 Amigo Secreto 抽選結果リンク一覧 🎁</h1>
+<form id="addForm">
+<input type="text" id="nameInput" placeholder="名前を入力" required>
+<button type="submit">追加</button>
+</form>
+<ul id="list"></ul>
+<script>
+async function loadList() {
+	const res = await fetch("/api/list");
+	const data = await res.json();
+	const ul = document.getElementById("list");
+	ul.innerHTML = '';
+	if (data.length === 0) {
+		ul.innerHTML = '<li>まだ参加者はいません。</li>';
+		return;
+	}
+	data.forEach(p => {
+		const li = document.createElement('li');
+		li.innerHTML = `${p.name} さん → <a href="${p.link}" target="_blank">結果を見る</a>`;
+		ul.appendChild(li);
+	});
+}
+document.getElementById("addForm").addEventListener("submit", async e => {
+	e.preventDefault();
+	const name = document.getElementById("nameInput").value.trim();
+	if (!name) return alert("名前を入力してください");
+	const res = await fetch("/api/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+	if (!res.ok) {
+		const text = await res.text();
+		alert("追加に失敗しました: " + text);
+		return;
+	}
+	document.getElementById("nameInput").value = "";
+	await loadList();
+});
+loadList();
+</script>
+</body>
+</html>
