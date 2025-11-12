@@ -178,15 +178,28 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "追加成功")
 }
 
-// リセット機能
 func resetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "POSTのみ対応", 405)
 		return
 	}
+
+	var req struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "リクエストエラー", 400)
+		return
+	}
+
+	// 固定パスワードチェック
+	if req.Password != "avadakedavra" {
+		http.Error(w, "パスワードが違います", 403)
+		return
+	}
+
 	mu.Lock()
 	defer mu.Unlock()
-
 	state.Members = []string{}
 	state.Pairs = []Pair{}
 	if err := saveState(); err != nil {
@@ -196,6 +209,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	fmt.Fprint(w, "状態をリセットしました")
 }
+
 
 func main() {
 	fs := http.FileServer(http.Dir("../frontend"))
