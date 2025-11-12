@@ -111,7 +111,7 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 func resultHandler(w http.ResponseWriter, r *http.Request) {
 	giver := r.URL.Query().Get("giver")
 	if giver == "" {
-		http.Error(w, "giverが必要です", 400)
+		http.Error(w, "É necessário informar o participante", 400)
 		return
 	}
 	mu.Lock()
@@ -130,23 +130,23 @@ func resultHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				if err := bcrypt.CompareHashAndPassword([]byte(p.Password), []byte(req.Password)); err != nil {
-					http.Error(w, "パスワードが違います", 403)
+					http.Error(w, "Senha incorreta", 403)
 					return
 				}
 				json.NewEncoder(w).Encode(map[string]string{"receiver": p.Receiver})
 				return
 			}
-			http.Error(w, "POSTメソッドのみ対応", 405)
+			http.Error(w, "Apenas método POST permitido", 405)
 			return
 		}
 	}
-	http.Error(w, "該当者なし", 404)
+	http.Error(w, "Participante não encontrado", 404)
 }
 
 // 参加者追加
 func addHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		http.Error(w, "POSTのみ対応", 405)
+		http.Error(w, "Apenas método POST permitido", 405)
 		return
 	}
 	var req struct{ Name string `json:"name"` }
@@ -156,14 +156,14 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
-		http.Error(w, "名前が空です", 400)
+		http.Error(w, "O nome não pode estar vazio", 400)
 		return
 	}
 	mu.Lock()
 	defer mu.Unlock()
 	for _, n := range state.Members {
 		if n == req.Name {
-			http.Error(w, "すでに存在します", 400)
+			http.Error(w, "O participante já existe", 400)
 			return
 		}
 	}
@@ -175,12 +175,12 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(200)
-	fmt.Fprint(w, "追加成功")
+	fmt.Fprint(w, "Participante adicionado com sucesso")
 }
 
 func resetHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		http.Error(w, "POSTのみ対応", 405)
+		http.Error(w, "Apenas método POST permitido", 405)
 		return
 	}
 
@@ -188,13 +188,13 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "リクエストエラー", 400)
+		http.Error(w, err.Error(), 400)
 		return
 	}
 
 	// 固定パスワードチェック
 	if req.Password != "avadakedavra" {
-		http.Error(w, "パスワードが違います", 403)
+		http.Error(w, "Senha incorreta", 403)
 		return
 	}
 
@@ -207,7 +207,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(200)
-	fmt.Fprint(w, "状態をリセットしました")
+	fmt.Fprint(w, "Estado reiniciado com sucesso")
 }
 
 
